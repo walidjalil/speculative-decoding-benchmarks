@@ -1,4 +1,4 @@
-# Speculative Decoding for LLM Inference
+# Reducing Latency in LLM Inference with Speculative Decoding
 
 ## Goal
 Implement and benchmark speculative decoding for LLM inference.
