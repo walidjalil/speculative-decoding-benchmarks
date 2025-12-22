@@ -79,4 +79,3 @@ This project is based on the speculative decoding / speculative sampling approac
 - Leviathan, Y., Kalman, M., & Matias, Y.  
   *Accelerating Large Language Model Decoding with Speculative Sampling* (2022)  
   https://arxiv.org/abs/2211.17192
-
