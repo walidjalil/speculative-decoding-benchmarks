@@ -5,7 +5,7 @@ Implement and benchmark speculative decoding for LLM inference.
 
 ## Models
 - Draft model: ~3B
-- Target model: 8B–30B
+- Target model: 8B–30B  (Haven't decided, might go for bigger models since I have access to compute)
 
 ## Baseline
 - Standard autoregressive decoding
@@ -16,7 +16,7 @@ Implement and benchmark speculative decoding for LLM inference.
 - Acceptance rate
 
 ## Infrastructure
-- RunPod (A100 40GB)
+- RunPod (A100 40GB GPUs)
 - Single- and multi-GPU setups
 
 ## TODO
