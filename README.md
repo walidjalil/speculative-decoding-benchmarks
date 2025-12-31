@@ -100,6 +100,3 @@ This project is based on the speculative decoding / speculative sampling approac
 ├── benchmarks/
 ├── scripts/
 └── README.md
-
-
----
