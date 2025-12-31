@@ -1,74 +1,81 @@
-# Reducing Latency in LLM Inference with Speculative Decoding
+# Speculative Decoding for Low-Latency LLM Inference
 
-## Goal
-Implement and benchmark speculative decoding for LLM inference.
+## Overview
+This repository implements and benchmarks **speculative decoding** as a latency-optimization technique for large language model (LLM) inference.
 
-## Models
-- Draft model: ~3B
-- Target model: 8B–30B  (Haven't decided, might go for bigger models since I have access to compute)
+The project is **engineering-oriented**, not research-driven.  
+The focus is on correctness, performance, and cost-efficiency rather than model training or downstream task quality.
 
-## Baseline
-- Standard autoregressive decoding
+Speculative decoding is treated explicitly as a **rejection sampling procedure**, ensuring that the final output distribution exactly matches that of the target model.
 
-## Metrics
-- Tokens/sec
-- Speedup
-- Acceptance rate
+---
 
-## Infrastructure
-- RunPod (A100 40GB GPUs)
-- Single- and multi-GPU setups
+## Motivation
+Modern LLM inference is often constrained by **latency and cost**, especially in interactive or real-time settings.
 
-## TODO
-- Implement baseline decoding
-- Implement speculative decoding
-- Benchmark single GPU
-- Benchmark multi-GPU
+Speculative decoding addresses this by:
+- using a smaller *draft model* to propose multiple tokens
+- verifying proposals with a larger *target model*
+- emitting accepted tokens without changing the target distribution
 
+This repository explores when and why this approach is beneficial in practice.
 
+---
 
-## Background: Speculative Decoding (Intuition)
+## Goals
+- Implement speculative decoding with **distributional correctness**
+- Compare speculative decoding against standard autoregressive decoding
+- Measure:
+  - latency
+  - throughput
+  - acceptance rate
+  - GPU memory usage
+  - cost per generated token
+- Evaluate trade-offs across different GPU architectures
 
-Speculative decoding can be thought of as a practical form of **rejection sampling** applied to language model decoding.
+---
 
-The basic idea is simple:
+## Non-Goals
+This project does **not** aim to:
+- train foundation models from scratch
+- optimize prompt quality or downstream task performance
+- build RAG systems, agents, or application-layer demos
+- publish academic research
 
-- A smaller **draft model** proposes several future tokens.
-- A larger **target model** then checks these proposals using a deterministic acceptance rule.
-- Accepted tokens are guaranteed to follow **the exact same distribution** as standard autoregressive decoding.
+---
 
-In other words, output quality stays the same — only **latency** improves.
+## Method (High-Level)
+Speculative decoding is implemented as follows:
 
-### Why this works
+1. A draft model proposes a sequence of tokens
+2. The target model evaluates the proposed tokens
+3. Tokens are accepted or rejected according to a deterministic acceptance rule
+4. Rejected tokens are resampled to preserve the target distribution
 
-Rejection sampling requires the proposal and target distributions to share the same support.  
-In speculative decoding, this is naturally satisfied because both models use the **same tokenizer and vocabulary**.
+The implementation follows the standard formulation of speculative decoding as rejection sampling.
 
-In practice, the draft model is usually a **smaller or distilled version** of the target model. This makes the two distributions similar, which increases the acceptance rate and directly improves **latency**.
+---
 
-- Shared support → guarantees correctness
-- Distributional similarity → determines **latency gains**
+## Evaluation Metrics
+The following metrics are reported for all experiments:
 
-### Faster decoding without quality loss
+- **Latency** (milliseconds per generated token)
+- **Throughput** (tokens per second)
+- **Acceptance rate**
+- **Cost per generated token**
+- **GPU memory utilization**
 
-When the draft model closely matches the target model:
-- Most proposed tokens are accepted
-- Multiple tokens can be verified in a single forward pass
-- End-to-end decoding **latency** is significantly reduced
+All benchmarks are run with controlled batch sizes and sequence lengths.
 
-If proposals are rejected:
-- The algorithm safely falls back to the target model
-- Correctness is still preserved
-- **Latency** benefits degrade gracefully rather than breaking
+---
 
-The result is:
-- **Lower decoding latency**
-- **No quality or performance penalty**
-- At the cost of running an additional (smaller) draft model in parallel
+## Hardware
+Experiments are conducted on the following GPUs:
 
-### In short
+- NVIDIA A100
+- NVIDIA H100
 
-Speculative decoding trades extra draft-model compute and memory for reduced inference **latency**, while preserving the exact output distribution.
+Hardware configuration, precision mode, and runtime parameters are documented per experiment.
 
 ---
 
@@ -79,3 +86,20 @@ This project is based on the speculative decoding / speculative sampling approac
 - Leviathan, Y., Kalman, M., & Matias, Y.  
   *Accelerating Large Language Model Decoding with Speculative Sampling* (2022)  
   https://arxiv.org/abs/2211.17192
+
+
+  ## Repository Structure
+```text
+.
+├── src/
+│   ├── decoding/
+│   │   ├── baseline.py        # Standard autoregressive decoding
+│   │   └── speculative.py     # Speculative decoding implementation
+│   ├── models/
+│   └── utils/
+├── benchmarks/
+├── scripts/
+└── README.md
+
+
+---
